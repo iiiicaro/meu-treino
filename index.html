@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Treino - Acompanhamento de Musculação</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Animation for sets */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        /* Pulse effect for active buttons */
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        
+        /* Slide animation */
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto px-4 py-6 max-w-md">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-blue-600">Meu Treino</h1>
+                <div class="flex space-x-2">
+                    <button id="historyBtn" class="bg-gray-500 text-white px-3 py-1 rounded-lg text-sm">
+                        <i class="fas fa-history"></i>
+                    </button>
+                    <button id="resetBtn" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <button id="helpBtn" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm">
+                        <i class="fas fa-question"></i>
+                    </button>
+                </div>
+            </div>
+            <p class="text-gray-600 mt-1">Acompanhe seu treino de musculação</p>
+        </header>
+
+        <!-- Workout Groups -->
+        <div id="mainContent" class="mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Selecione o Grupo de Treino</h2>
+            <div class="grid grid-cols-3 gap-3">
+                <button data-group="A" class="group-btn bg-blue-500 hover:bg-blue-600 text-white py-3 px-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-dumbbell mr-1"></i> Grupo A
+                </button>
+                <button data-group="B" class="group-btn bg-green-500 hover:bg-green-600 text-white py-3 px-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-running mr-1"></i> Grupo B
+                </button>
+                <button data-group="C" class="group-btn bg-purple-500 hover:bg-purple-600 text-white py-3 px-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-fire-alt mr-1"></i> Grupo C
+                </button>
+            </div>
+        </div>
+
+        <!-- Current Workout Display -->
+        <div id="workoutDisplay" class="bg-white rounded-xl shadow-md p-4 mb-6 hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h2 id="currentGroup" class="text-lg font-bold text-blue-600"></h2>
+                <span id="exerciseCounter" class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"></span>
+            </div>
+            
+            <div id="exerciseContainer" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                <!-- Exercises will be inserted here -->
+            </div>
+            
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <button id="finishWorkoutBtn" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+                    Finalizar Treino <i class="fas fa-check ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Timer Section -->
+        <div id="timerSection" class="bg-white rounded-xl shadow-md p-4 mb-6 hidden">
+            <div class="flex justify-between items-center">
+                <h3 class="font-medium text-gray-700">Tempo de Descanso</h3>
+                <div id="timerDisplay" class="text-xl font-bold text-blue-600">01:30</div>
+            </div>
+            <div class="mt-3 flex justify-center space-x-4">
+                <button id="startTimerBtn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg">
+                    <i class="fas fa-play"></i> Iniciar
+                </button>
+                <button id="stopTimerBtn" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg">
+                    <i class="fas fa-stop"></i> Parar
+                </button>
+            </div>
+        </div>
+
+        <!-- Workout Summary -->
+        <div id="summarySection" class="bg-white rounded-xl shadow-md p-4 hidden">
+            <h2 class="text-lg font-bold text-blue-600 mb-3">Resumo do Treino</h2>
+            <div id="summaryContent" class="space-y-2">
+                <!-- Summary will be inserted here -->
+            </div>
+            <button id="newWorkoutBtn" class="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+                Novo Treino <i class="fas fa-plus ml-1"></i>
+            </button>
+        </div>
+
+        <!-- History Section -->
+        <div id="historySection" class="bg-white rounded-xl shadow-md p-4 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-blue-600">Histórico de Treinos</h2>
+                <button id="closeHistoryBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="historyContent" class="max-h-96 overflow-y-auto">
+                <!-- History items will be inserted here -->
+            </div>
+            <button id="clearHistoryBtn" class="w-full mt-4 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+                Limpar Histórico <i class="fas fa-trash ml-1"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-xl shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-blue-600">Como Usar</h3>
+                <button id="closeHelpModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4 text-gray-700">
+                <div>
+                    <h4 class="font-semibold text-gray-800">1. Seleção de Grupo</h4>
+                    <p>Escolha entre os grupos A, B ou C para iniciar seu treino.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800">2. Acompanhamento de Séries</h4>
+                    <p>Para cada exercício, marque as séries completadas (4x12).</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800">3. Temporizador</h4>
+                    <p>Use o cronômetro para controlar seu tempo de descanso entre séries.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800">4. Histórico</h4>
+                    <p>Seus treinos são salvos automaticamente no histórico para acompanhamento.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800">5. Finalização</h4>
+                    <p>Ao concluir todos os exercícios, você verá um resumo do treino.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Workout data
+        const workoutData = {
+            'A': {
+                name: 'Grupo A – Peitoral / Bíceps / Ombro / Panturrilhas',
+                exercises: [
+                    { name: 'Supino Reto (Máquina)', type: 'Peitoral' },
+                    { name: 'Supino Inclinado (Máquina)', type: 'Peitoral' },
+                    { name: 'Crucifixo Inclinado', type: 'Peitoral' },
+                    { name: 'Voador', type: 'Peitoral' },
+                    { name: 'Cross-Over', type: 'Peitoral' },
+                    { name: 'Rosca Direta', type: 'Bíceps' },
+                    { name: 'Rosca Scott', type: 'Bíceps' },
+                    { name: 'Rosca Alternada', type: 'Bíceps' },
+                    { name: 'Rosca em Cabo', type: 'Bíceps' },
+                    { name: 'Elevação Lateral', type: 'Ombro' },
+                    { name: 'Elevação Frontal', type: 'Ombro' },
+                    { name: 'Press com Halteres', type: 'Ombro' },
+                    { name: 'Flexão Plantar em Pé', type: 'Panturrilhas' },
+                    { name: 'Flexão Plantar Sentado', type: 'Panturrilhas' }
+                ]
+            },
+            'B': {
+                name: 'Grupo B – Pernas / Glúteos',
+                exercises: [
+                    { name: 'Leg Press 45º', type: 'Coxas' },
+                    { name: 'Agachamento', type: 'Coxas' },
+                    { name: 'Extensora', type: 'Coxas' },
+                    { name: 'Flexora Deitada', type: 'Coxas' },
+                    { name: 'Flexora Sentado', type: 'Coxas' },
+                    { name: 'Adução', type: 'Coxas' },
+                    { name: 'Abdução', type: 'Coxas' },
+                    { name: 'Agachamento Sumô', type: 'Coxas' }
+                ]
+            },
+            'C': {
+                name: 'Grupo C – Costas / Tríceps / Ombro Posterior',
+                exercises: [
+                    { name: 'Puxador para Trás', type: 'Dorsais' },
+                    { name: 'Puxador para Frente', type: 'Dorsais' },
+                    { name: 'Puxador Frente (Fechado)', type: 'Dorsais' },
+                    { name: 'Remo Sentado', type: 'Dorsais' },
+                    { name: 'Remo Cavalo', type: 'Dorsais' },
+                    { name: 'Crucifixo Inverso', type: 'Ombro Posterior' },
+                    { name: 'Extensão no Puxador', type: 'Tríceps' },
+                    { name: 'Press Francês', type: 'Tríceps' },
+                    { name: 'Tríceps Testa', type: 'Tríceps' },
+                    { name: 'Extensão na Máquina (Corda)', type: 'Tríceps' }
+                ]
+            }
+        };
+
+        // DOM elements
+        const groupButtons = document.querySelectorAll('.group-btn');
+        const mainContent = document.getElementById('mainContent');
+        const workoutDisplay = document.getElementById('workoutDisplay');
+        const currentGroupDisplay = document.getElementById('currentGroup');
+        const exerciseContainer = document.getElementById('exerciseContainer');
+        const exerciseCounter = document.getElementById('exerciseCounter');
+        const timerSection = document.getElementById('timerSection');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startTimerBtn = document.getElementById('startTimerBtn');
+        const stopTimerBtn = document.getElementById('stopTimerBtn');
+        const finishWorkoutBtn = document.getElementById('finishWorkoutBtn');
+        const summarySection = document.getElementById('summarySection');
+        const summaryContent = document.getElementById('summaryContent');
+        const newWorkoutBtn = document.getElementById('newWorkoutBtn');
+        const historyBtn = document.getElementById('historyBtn');
+        const historySection = document.getElementById('historySection');
+        const historyContent = document.getElementById('historyContent');
+        const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const helpBtn = document.getElementById('helpBtn');
+        const helpModal = document.getElementById('helpModal');
+        const closeHelpModal = document.getElementById('closeHelpModal');
+
+        // State variables
+        let currentGroup = null;
+        let completedExercises = 0;
+        let totalExercises = 0;
+        let timerInterval = null;
+        let secondsLeft = 90; // 1:30 default rest time
+        let workoutSummary = [];
+        let workoutHistory = JSON.parse(localStorage.getItem('workoutHistory')) || [];
+
+        // Event Listeners
+        groupButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                currentGroup = button.dataset.group;
+                startWorkout(currentGroup);
+            });
+        });
+
+        startTimerBtn.addEventListener('click', startTimer);
+        stopTimerBtn.addEventListener('click', stopTimer);
+        finishWorkoutBtn.addEventListener('click', finishWorkout);
+        newWorkoutBtn.addEventListener('click', resetWorkout);
+        historyBtn.addEventListener('click', showHistory);
+        closeHistoryBtn.addEventListener('click', hideHistory);
+        clearHistoryBtn.addEventListener('click', clearHistory);
+        resetBtn.addEventListener('click', resetWorkout);
+        helpBtn.addEventListener('click', () => helpModal.classList.remove('hidden'));
+        closeHelpModal.addEventListener('click', () => helpModal.classList.add('hidden'));
+
+        // Initialize by showing history if any
+        if (workoutHistory.length > 0) {
+            updateHistoryDisplay();
+        }
+
+        // Functions
+        function startWorkout(group) {
+            const workout = workoutData[group];
+            currentGroupDisplay.textContent = workout.name;
+            
+            // Clear previous exercises
+            exerciseContainer.innerHTML = '';
+            
+            // Add exercises to container
+            workout.exercises.forEach((exercise, index) => {
+                const exerciseElement = createExerciseElement(exercise, index);
+                exerciseContainer.appendChild(exerciseElement);
+            });
+            
+            // Update counters
+            totalExercises = workout.exercises.length;
+            completedExercises = 0;
+            updateExerciseCounter();
+            
+            // Show workout display
+            mainContent.classList.add('hidden');
+            workoutDisplay.classList.remove('hidden');
+            timerSection.classList.remove('hidden');
+            summarySection.classList.add('hidden');
+            historySection.classList.add('hidden');
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function createExerciseElement(exercise, index) {
+            const exerciseDiv = document.createElement('div');
+            exerciseDiv.className = 'exercise bg-gray-50 p-3 rounded-lg border border-gray-200';
+            exerciseDiv.dataset.exerciseIndex = index;
+            
+            const exerciseHeader = document.createElement('div');
+            exerciseHeader.className = 'flex justify-between items-center mb-2';
+            
+            const exerciseTitle = document.createElement('h3');
+            exerciseTitle.className = 'font-medium text-gray-800';
+            exerciseTitle.textContent = exercise.name;
+            
+            const exerciseType = document.createElement('span');
+            exerciseType.className = 'text-xs font-medium px-2 py-0.5 rounded-full';
+            
+            // Set color based on exercise type
+            switch(exercise.type) {
+                case 'Peitoral':
+                    exerciseType.className += ' bg-red-100 text-red-800';
+                    break;
+                case 'Bíceps':
+                    exerciseType.className += ' bg-blue-100 text-blue-800';
+                    break;
+                case 'Ombro':
+                    exerciseType.className += ' bg-purple-100 text-purple-800';
+                    break;
+                case 'Panturrilhas':
+                    exerciseType.className += ' bg-green-100 text-green-800';
+                    break;
+                case 'Coxas':
+                    exerciseType.className += ' bg-yellow-100 text-yellow-800';
+                    break;
+                case 'Dorsais':
+                    exerciseType.className += ' bg-indigo-100 text-indigo-800';
+                    break;
+                case 'Ombro Posterior':
+                    exerciseType.className += ' bg-pink-100 text-pink-800';
+                    break;
+                case 'Tríceps':
+                    exerciseType.className += ' bg-teal-100 text-teal-800';
+                    break;
+                default:
+                    exerciseType.className += ' bg-gray-100 text-gray-800';
+            }
+            
+            exerciseType.textContent = exercise.type;
+            
+            exerciseHeader.appendChild(exerciseTitle);
+            exerciseHeader.appendChild(exerciseType);
+            
+            const setsContainer = document.createElement('div');
+            setsContainer.className = 'sets-container grid grid-cols-4 gap-2 mt-2';
+            
+            // Create 4 sets (4x12)
+            for (let i = 0; i < 4; i++) {
+                const setButton = document.createElement('button');
+                setButton.className = 'set-btn py-2 px-1 rounded-md border border-gray-300 text-sm font-medium transition-colors hover:bg-blue-100';
+                setButton.textContent = `${i+1}ª série`;
+                setButton.dataset.setNumber = i+1;
+                
+                setButton.addEventListener('click', function() {
+                    toggleSetCompletion(this, exerciseDiv.dataset.exerciseIndex);
+                });
+                
+                setsContainer.appendChild(setButton);
+            }
+            
+            exerciseDiv.appendChild(exerciseHeader);
+            exerciseDiv.appendChild(setsContainer);
+            
+            return exerciseDiv;
+        }
+
+        function toggleSetCompletion(button, exerciseIndex) {
+            if (button.classList.contains('bg-blue-500')) {
+                // Already completed - undo
+                button.classList.remove('bg-blue-500', 'text-white', 'border-blue-600');
+                button.classList.add('border-gray-300', 'hover:bg-blue-100');
+                
+                // Check if this was the last completed set for this exercise
+                const exerciseDiv = document.querySelector(`.exercise[data-exercise-index="${exerciseIndex}"]`);
+                const completedSets = exerciseDiv.querySelectorAll('.bg-blue-500').length;
+                
+                if (completedSets === 0) {
+                    // This was the last completed set for this exercise
+                    completedExercises--;
+                    updateExerciseCounter();
+                }
+            } else {
+                // Complete this set
+                button.classList.add('bg-blue-500', 'text-white', 'border-blue-600');
+                button.classList.remove('border-gray-300', 'hover:bg-blue-100');
+                
+                // Check if this is the first completed set for this exercise
+                const exerciseDiv = document.querySelector(`.exercise[data-exercise-index="${exerciseIndex}"]`);
+                const completedSets = exerciseDiv.querySelectorAll('.bg-blue-500').length;
+                
+                if (completedSets === 4) {
+                    // All sets completed for this exercise
+                    completedExercises++;
+                    updateExerciseCounter();
+                    
+                    // Add pulse effect to next exercise if available
+                    const nextExerciseIndex = parseInt(exerciseIndex) + 1;
+                    const nextExercise = document.querySelector(`.exercise[data-exercise-index="${nextExerciseIndex}"]`);
+                    
+                    if (nextExercise) {
+                        nextExercise.classList.add('fade-in');
+                        nextExercise.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            }
+        }
+
+        function updateExerciseCounter() {
+            exerciseCounter.textContent = `${completedExercises}/${totalExercises}`;
+            
+            if (completedExercises === totalExercises) {
+                finishWorkoutBtn.classList.add('pulse');
+            } else {
+                finishWorkoutBtn.classList.remove('pulse');
+            }
+        }
+
+        function startTimer() {
+            if (timerInterval) return;
+            
+            startTimerBtn.disabled = true;
+            stopTimerBtn.disabled = false;
+            
+            timerInterval = setInterval(() => {
+                secondsLeft--;
+                updateTimerDisplay();
+                
+                if (secondsLeft <= 0) {
+                    stopTimer();
+                    // Play sound or vibrate to notify user
+                    if (navigator.vibrate) {
+                        navigator.vibrate([200, 100, 200]);
+                    }
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            startTimerBtn.disabled = false;
+            stopTimerBtn.disabled = true;
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(secondsLeft / 60);
+            const seconds = secondsLeft % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Change color when time is running low
+            if (secondsLeft <= 10) {
+                timerDisplay.classList.add('text-red-500');
+                timerDisplay.classList.remove('text-blue-600');
+            } else {
+                timerDisplay.classList.remove('text-red-500');
+                timerDisplay.classList.add('text-blue-600');
+            }
+        }
+
+        function finishWorkout() {
+            if (completedExercises < totalExercises) {
+                alert('Você ainda não completou todos os exercícios!');
+                return;
+            }
+            
+            // Build workout summary
+            workoutSummary = [];
+            const exercises = document.querySelectorAll('.exercise');
+            
+            exercises.forEach(exercise => {
+                const exerciseName = exercise.querySelector('h3').textContent;
+                const exerciseType = exercise.querySelector('span').textContent;
+                const completedSets = exercise.querySelectorAll('.bg-blue-500').length;
+                
+                workoutSummary.push({
+                    name: exerciseName,
+                    type: exerciseType,
+                    setsCompleted: completedSets
+                });
+            });
+            
+            // Add to history
+            const workoutDate = new Date();
+            const historyItem = {
+                group: currentGroup,
+                date: workoutDate.toISOString(),
+                summary: workoutSummary
+            };
+            
+            workoutHistory.unshift(historyItem);
+            localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+            
+            // Display summary
+            displaySummary();
+            
+            // Hide workout display
+            workoutDisplay.classList.add('hidden');
+            timerSection.classList.add('hidden');
+            summarySection.classList.remove('hidden');
+            historySection.classList.add('hidden');
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function displaySummary() {
+            summaryContent.innerHTML = '';
+            
+            const summaryTitle = document.createElement('p');
+            summaryTitle.className = 'font-semibold text-gray-800 mb-2';
+            summaryTitle.textContent = `Treino ${currentGroup} concluído com sucesso!`;
+            summaryContent.appendChild(summaryTitle);
+            
+            const summaryList = document.createElement('div');
+            summaryList.className = 'space-y-3';
+            
+            workoutSummary.forEach(exercise => {
+                const exerciseDiv = document.createElement('div');
+                exerciseDiv.className = 'bg-gray-50 p-3 rounded-lg';
+                
+                const exerciseHeader = document.createElement('div');
+                exerciseHeader.className = 'flex justify-between items-center';
+                
+                const exerciseName = document.createElement('span');
+                exerciseName.className = 'font-medium';
+                exerciseName.textContent = exercise.name;
+                
+                const exerciseType = document.createElement('span');
+                exerciseType.className = 'text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-800';
+                exerciseType.textContent = exercise.type;
+                
+                exerciseHeader.appendChild(exerciseName);
+                exerciseHeader.appendChild(exerciseType);
+                
+                const exerciseSets = document.createElement('p');
+                exerciseSets.className = 'text-sm text-gray-600 mt-1';
+                exerciseSets.textContent = `Séries completas: ${exercise.setsCompleted}/4`;
+                
+                exerciseDiv.appendChild(exerciseHeader);
+                exerciseDiv.appendChild(exerciseSets);
+                summaryList.appendChild(exerciseDiv);
+            });
+            
+            summaryContent.appendChild(summaryList);
+            
+            const congrats = document.createElement('p');
+            congrats.className = 'mt-4 text-center text-green-600 font-medium';
+            congrats.textContent = 'Parabéns pelo treino! 💪';
+            summaryContent.appendChild(congrats);
+        }
+
+        function showHistory() {
+            updateHistoryDisplay();
+            mainContent.classList.add('hidden');
+            workoutDisplay.classList.add('hidden');
+            summarySection.classList.add('hidden');
+            historySection.classList.remove('hidden');
+            historySection.classList.add('slide-in');
+        }
+
+        function hideHistory() {
+            historySection.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+        }
+
+        function updateHistoryDisplay() {
+            historyContent.innerHTML = '';
+            
+            if (workoutHistory.length === 0) {
+                historyContent.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum treino registrado ainda</p>';
+                return;
+            }
+            
+            workoutHistory.forEach((workout, index) => {
+                const workoutDate = new Date(workout.date);
+                const formattedDate = workoutDate.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item bg-gray-50 p-3 rounded-lg mb-3 border border-gray-200';
+                
+                const itemHeader = document.createElement('div');
+                itemHeader.className = 'flex justify-between items-center mb-2';
+                
+                const itemTitle = document.createElement('h3');
+                itemTitle.className = 'font-medium text-blue-600';
+                itemTitle.textContent = `Treino ${workout.group} - ${formattedDate}`;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'text-red-500 hover:text-red-700';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteWorkout(index);
+                });
+                
+                itemHeader.appendChild(itemTitle);
+                itemHeader.appendChild(deleteBtn);
+                
+                const itemContent = document.createElement('div');
+                itemContent.className = 'text-sm text-gray-600';
+                
+                // Count completed exercises
+                const completedExercises = workout.summary.filter(ex => ex.setsCompleted === 4).length;
+                const totalExercises = workout.summary.length;
+                
+                const progressText = document.createElement('p');
+                progressText.textContent = `Exercícios completos: ${completedExercises}/${totalExercises}`;
+                
+                itemContent.appendChild(progressText);
+                historyItem.appendChild(itemHeader);
+                historyItem.appendChild(itemContent);
+                
+                // Add click event to view details
+                historyItem.addEventListener('click', () => {
+                    viewWorkoutDetails(workout);
+                });
+                
+                historyContent.appendChild(historyItem);
+            });
+        }
+
+        function viewWorkoutDetails(workout) {
+            historyContent.innerHTML = '';
+            
+            const backButton = document.createElement('button');
+            backButton.className = 'flex items-center text-blue-500 mb-4';
+            backButton.innerHTML = '<i class="fas fa-arrow-left mr-2"></i> Voltar';
+            backButton.addEventListener('click', updateHistoryDisplay);
+            
+            historyContent.appendChild(backButton);
+            
+            const workoutDate = new Date(workout.date);
+            const formattedDate = workoutDate.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const title = document.createElement('h3');
+            title.className = 'text-lg font-bold text-blue-600 mb-4';
+            title.textContent = `Treino ${workout.group} - ${formattedDate}`;
+            historyContent.appendChild(title);
+            
+            const detailsList = document.createElement('div');
+            detailsList.className = 'space-y-3';
+            
+            workout.summary.forEach(exercise => {
+                const exerciseDiv = document.createElement('div');
+                exerciseDiv.className = 'bg-gray-50 p-3 rounded-lg';
+                
+                const exerciseHeader = document.createElement('div');
+                exerciseHeader.className = 'flex justify-between items-center';
+                
+                const exerciseName = document.createElement('span');
+                exerciseName.className = 'font-medium';
+                exerciseName.textContent = exercise.name;
+                
+                const exerciseType = document.createElement('span');
+                exerciseType.className = 'text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-800';
+                exerciseType.textContent = exercise.type;
+                
+                exerciseHeader.appendChild(exerciseName);
+                exerciseHeader.appendChild(exerciseType);
+                
+                const exerciseSets = document.createElement('p');
+                exerciseSets.className = 'text-sm text-gray-600 mt-1';
+                exerciseSets.textContent = `Séries completas: ${exercise.setsCompleted}/4`;
+                
+                // Add checkmark if all sets completed
+                if (exercise.setsCompleted === 4) {
+                    const checkmark = document.createElement('span');
+                    checkmark.className = 'text-green-500 ml-2';
+                    checkmark.innerHTML = '<i class="fas fa-check"></i>';
+                    exerciseSets.appendChild(checkmark);
+                }
+                
+                exerciseDiv.appendChild(exerciseHeader);
+                exerciseDiv.appendChild(exerciseSets);
+                detailsList.appendChild(exerciseDiv);
+            });
+            
+            historyContent.appendChild(detailsList);
+        }
+
+        function deleteWorkout(index) {
+            if (confirm('Tem certeza que deseja excluir este treino do histórico?')) {
+                workoutHistory.splice(index, 1);
+                localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+                updateHistoryDisplay();
+            }
+        }
+
+        function clearHistory() {
+            if (confirm('Tem certeza que deseja limpar todo o histórico de treinos?')) {
+                workoutHistory = [];
+                localStorage.removeItem('workoutHistory');
+                updateHistoryDisplay();
+            }
+        }
+
+        function resetWorkout() {
+            // Reset state
+            currentGroup = null;
+            completedExercises = 0;
+            totalExercises = 0;
+            stopTimer();
+            secondsLeft = 90;
+            updateTimerDisplay();
+            
+            // Hide displays
+            workoutDisplay.classList.add('hidden');
+            timerSection.classList.add('hidden');
+            summarySection.classList.add('hidden');
+            historySection.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+            
+            // Reset UI
+            exerciseContainer.innerHTML = '';
+            exerciseCounter.textContent = '';
+            currentGroupDisplay.textContent = '';
+            finishWorkoutBtn.classList.remove('pulse');
+        }
+
+        // Initialize timer display
+        updateTimerDisplay();
+    </script>
+</body>
+</html>
